@@ -1,0 +1,279 @@
+// ---- Modale : Journal ----
+function openJournalModal(){
+  var modal = document.getElementById('modal');
+  var list = (state.journal || []).slice().sort(function(a,b){ return new Date(b.ts) - new Date(a.ts); });
+
+  var rows = list.map(function(j){
+    var property = state.properties[j.propertyId];
+    var color = property ? property.color : '#6B6E70';
+    var tag = j.propertyName || 'Général';
+    return '<div class="journal-row">' +
+      '<div class="journal-meta"><span class="journal-tag" style="background:' + color + '">' + escapeHtml(tag) + '</span><span class="journal-time">' + fmtDateTime(j.ts) + '</span></div>' +
+      '<div class="journal-msg">' + escapeHtml(j.message) + '</div>' +
+      '</div>';
+  }).join('');
+
+  modal.innerHTML =
+    '<h3>Journal des modifications <button class="icon-btn" id="closeModalBtn" aria-label="Fermer">\u2715</button></h3>' +
+    (list.length ? rows : '<div class="empty-state">Aucune modification enregistrée pour le moment.</div>') +
+    '<div class="modal-actions" style="margin-top:16px;"><button class="btn btn-ghost" id="cancelBtn" style="flex:1;">Fermer</button></div>';
+
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('closeModalBtn').onclick = closeModal;
+  document.getElementById('cancelBtn').onclick = closeModal;
+}
+
+// ---- Sauvegardes / historique (restauration de versions antérieures) ----
+async function openBackupsModal(){
+  var modal = document.getElementById('modal');
+  modal.innerHTML =
+    '<h3>Sauvegardes <button class="icon-btn" id="closeModalBtn" aria-label="Fermer">\u2715</button></h3>' +
+    '<div class="empty-state" id="backupsLoading">Chargement des versions précédentes...</div>' +
+    '<div class="modal-actions" style="margin-top:16px;"><button class="btn btn-ghost" id="cancelBtn" style="flex:1;">Fermer</button></div>';
+
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('closeModalBtn').onclick = closeModal;
+  document.getElementById('cancelBtn').onclick = closeModal;
+
+  if(!cloudReady || !currentUser){
+    document.getElementById('backupsLoading').textContent = 'Non connecté.';
+    return;
+  }
+
+  try {
+    var res = await sb.from('home_data_history')
+      .select('id, updated_at, archived_at')
+      .eq('user_id', currentUser.id)
+      .order('archived_at', { ascending: false })
+      .limit(30);
+
+    if(res.error){
+      console.error('Erreur chargement des sauvegardes:', res.error);
+      document.getElementById('backupsLoading').textContent = describeSyncError(res.error);
+      return;
+    }
+
+    var rows = res.data || [];
+    var loadingEl = document.getElementById('backupsLoading');
+    if(!loadingEl) return; // la modale a été fermée entre-temps
+
+    if(!rows.length){
+      loadingEl.textContent = 'Aucune sauvegarde antérieure pour le moment. Une version est archivée automatiquement à chaque modification.';
+      return;
+    }
+
+    var list = document.createElement('div');
+    rows.forEach(function(row){
+      var item = document.createElement('div');
+      item.className = 'journal-row';
+      item.innerHTML =
+        '<div class="journal-meta"><span class="journal-time">' + fmtDateTime(row.archived_at) + '</span></div>' +
+        '<div class="journal-msg">Version datée du ' + fmtDateTime(row.updated_at) + '</div>';
+      var restoreBtn = document.createElement('button');
+      restoreBtn.className = 'btn btn-ghost';
+      restoreBtn.style.marginTop = '6px';
+      restoreBtn.textContent = 'Restaurer cette version';
+      restoreBtn.onclick = function(){ restoreBackup(row.id); };
+      item.appendChild(restoreBtn);
+      list.appendChild(item);
+    });
+
+    loadingEl.replaceWith(list);
+  } catch(e){
+    console.error('Exception chargement des sauvegardes:', e);
+    var el = document.getElementById('backupsLoading');
+    if(el) el.textContent = describeSyncError(e);
+  }
+}
+
+async function restoreBackup(historyId){
+  var ok = await showConfirm(
+    'Restaurer cette version remplacera l\'état actuel du carnet (biens, historique, documents liés). Cette action peut être annulée en restaurant une version plus récente ensuite. Continuer ?',
+    'Restaurer'
+  );
+  if(!ok) return;
+
+  try {
+    var res = await sb.from('home_data_history').select('state').eq('id', historyId).eq('user_id', currentUser.id).single();
+    if(res.error || !res.data){
+      console.error('Erreur lecture de la sauvegarde:', res.error);
+      await showAlert(res.error ? describeSyncError(res.error) : 'Cette sauvegarde est introuvable — elle a peut-être expiré ou déjà été purgée.');
+      return;
+    }
+
+    state = res.data.state;
+    normalizeState(); // comble les champs absents sur une sauvegarde antérieure au schéma actuel
+    var saved = await persist();
+    if(saved){
+      closeModal();
+      renderContent();
+      await showAlert('Version restaurée avec succès.');
+    } else {
+      await showAlert('La restauration a échoué pendant la sauvegarde. ' + (lastSyncErrorMessage || 'Réessayez.'));
+    }
+  } catch(e){
+    console.error('Exception restauration de sauvegarde:', e);
+    await showAlert(describeSyncError(e));
+  }
+}
+
+// ---- Événements globaux & Démarrage ----
+var emailBtn = document.getElementById('emailLoginBtn');
+if(emailBtn) emailBtn.addEventListener('click', function(){
+  if(authMode === 'password') signInWithPassword();
+  else signInEmail();
+});
+
+var authModeToggle = document.getElementById('authModeToggle');
+if(authModeToggle) authModeToggle.addEventListener('click', function(e){
+  e.preventDefault();
+  setAuthMode(authMode === 'password' ? 'magiclink' : 'password');
+});
+
+var passwordInputEl = document.getElementById('passwordInput');
+if(passwordInputEl) passwordInputEl.addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && authMode === 'password') signInWithPassword();
+});
+
+var syncStatusEl = document.getElementById('syncStatus');
+if(syncStatusEl) syncStatusEl.addEventListener('click', function(){
+  if(syncStatusEl.classList.contains('error')) persist();
+});
+
+var accountBtn = document.getElementById('accountBtn');
+if(accountBtn) accountBtn.addEventListener('click', function(){
+  if(!currentUser) return;
+  openAccountModal();
+});
+
+function openAccountModal(){
+  var modal = document.getElementById('modal');
+  modal.innerHTML =
+    '<h3>Compte <button class="icon-btn" id="closeModalBtn" aria-label="Fermer">\u2715</button></h3>' +
+    '<div class="field-hint" style="margin-bottom:12px;">' + escapeHtml(currentUser.email || '') + '</div>' +
+    '<button class="btn btn-ghost" id="changePasswordBtn" style="width:100%; margin-bottom:8px;">🔑 Changer mon mot de passe</button>' +
+    '<button class="btn btn-ghost" id="signOutBtn" style="width:100%;">Se déconnecter</button>' +
+    '<div class="modal-actions" style="margin-top:16px;"><button class="btn btn-ghost" id="cancelBtn" style="flex:1;">Fermer</button></div>';
+
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('closeModalBtn').onclick = closeModal;
+  document.getElementById('cancelBtn').onclick = closeModal;
+
+  document.getElementById('changePasswordBtn').onclick = openChangePasswordModal;
+
+  document.getElementById('signOutBtn').onclick = async function(){
+    var ok = await showConfirm('Se déconnecter ?', 'Se déconnecter');
+    if(ok) signOutCloud();
+  };
+}
+
+function openChangePasswordModal(){
+  var modal = document.getElementById('modal');
+  modal.innerHTML =
+    '<h3>Changer mon mot de passe <button class="icon-btn" id="closeModalBtn" aria-label="Fermer">\u2715</button></h3>' +
+    '<div class="field"><label>Nouveau mot de passe</label><input type="password" id="newPasswordInput" placeholder="••••••••" autocomplete="new-password"></div>' +
+    '<div class="field"><label>Confirmer le mot de passe</label><input type="password" id="confirmPasswordInput" placeholder="••••••••" autocomplete="new-password"></div>' +
+    '<div id="changePasswordStatus" style="text-align:center; font-size:12.5px; margin-top:4px; min-height:16px;"></div>' +
+    '<div class="modal-actions" style="margin-top:16px;">' +
+      '<button class="btn btn-ghost" id="cancelBtn" style="flex:1;">Annuler</button>' +
+      '<button class="btn btn-primary" id="saveNewPasswordBtn">Enregistrer</button>' +
+    '</div>';
+
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('closeModalBtn').onclick = closeModal;
+  document.getElementById('cancelBtn').onclick = closeModal;
+
+  document.getElementById('saveNewPasswordBtn').onclick = async function(){
+    var pwd = document.getElementById('newPasswordInput').value;
+    var confirmPwd = document.getElementById('confirmPasswordInput').value;
+    var statusEl = document.getElementById('changePasswordStatus');
+
+    if(!pwd || pwd.length < 8){
+      statusEl.style.color = 'var(--red)';
+      statusEl.textContent = 'Le mot de passe doit contenir au moins 8 caractères.';
+      return;
+    }
+    if(pwd !== confirmPwd){
+      statusEl.style.color = 'var(--red)';
+      statusEl.textContent = 'Les deux mots de passe ne correspondent pas.';
+      return;
+    }
+
+    statusEl.style.color = '';
+    statusEl.textContent = 'Enregistrement...';
+    var res = await sb.auth.updateUser({ password: pwd });
+    if(res.error){
+      statusEl.style.color = 'var(--red)';
+      statusEl.textContent = 'Erreur : ' + res.error.message;
+      return;
+    }
+
+    closeModal();
+    await showAlert('Mot de passe mis à jour avec succès.');
+  };
+}
+
+var addBtn = document.getElementById('addBtn');
+if(addBtn) addBtn.addEventListener('click', function(){ openEntryModal(null); });
+
+var journalBtn = document.getElementById('journalBtn');
+if(journalBtn) journalBtn.addEventListener('click', openJournalModal);
+
+var backupsBtn = document.getElementById('backupsBtn');
+if(backupsBtn) backupsBtn.addEventListener('click', openBackupsModal);
+
+var scrollTopBtn = document.getElementById('scrollTopBtn');
+if(scrollTopBtn){
+  window.addEventListener('scroll', debounce(function(){
+    scrollTopBtn.style.display = (window.scrollY > 400) ? 'flex' : 'none';
+  }, 100));
+  scrollTopBtn.onclick = function(){
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+}
+
+var modalOverlay = document.getElementById('modalOverlay');
+if(modalOverlay){
+  modalOverlay.addEventListener('click', function(e){
+    if(e.target.id === 'modalOverlay') closeModal();
+  });
+}
+
+// Fermeture au clavier (Échap) — modale d'édition et modale de confirmation/alerte
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Escape') return;
+  var overlay = document.getElementById('modalOverlay');
+  if(overlay && overlay.classList.contains('open')){ closeModal(); return; }
+  var confirmOverlay = document.getElementById('confirmOverlay');
+  if(confirmOverlay && confirmOverlay.classList.contains('open')){
+    var cancelBtn = document.getElementById('confirmCancelBtn');
+    if(cancelBtn && cancelBtn.style.display !== 'none' && cancelBtn.onclick) cancelBtn.onclick();
+  }
+});
+
+// Initialisation
+initCloud();
+if(cloudReady){
+  sb.auth.onAuthStateChange(function(event, session){
+    if(session){
+      currentUser = session.user;
+      var authEl = document.getElementById('authOverlay');
+      if(authEl) authEl.style.display = 'none';
+      loadState();
+    } else {
+      var authEl = document.getElementById('authOverlay');
+      if(authEl) authEl.style.display = 'flex';
+    }
+  });
+} else {
+  // Sans configuration Supabase valide, l'app ne peut fonctionner : pas de mode
+  // local de secours (pour éviter toute confusion entre données synchronisées
+  // et données restées uniquement sur cet appareil).
+  var content = document.getElementById('content');
+  if(content){
+    content.innerHTML = '<div class="empty-state">⚠️ Configuration cloud manquante ou invalide.<br><br>Vérifiez SUPABASE_URL et SUPABASE_KEY dans le code.</div>';
+  }
+  var authOverlay = document.getElementById('authOverlay');
+  if(authOverlay) authOverlay.style.display = 'none';
+}
+

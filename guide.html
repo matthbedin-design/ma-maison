@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ma Maison — Guide de démarrage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1B1D1E; --surface:#242628; --surface-2:#2B2E30; --border:#35383A;
+  --text:#ECECE8; --text-muted:#9B9E9F; --yellow:#F0B429; --red:#D9534F; --green:#5FAE7D; --orange:#E8791A;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#1B1D1E; --surface:#242628; --surface-2:#2B2E30; --border:#35383A;
+    --text:#ECECE8; --text-muted:#9B9E9F;
+  }
+}
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+body{
+  background:var(--bg); color:var(--text); font-family:'Inter',sans-serif;
+  -webkit-font-smoothing:antialiased; line-height:1.55;
+}
+.wrap{ max-width:760px; margin:0 auto; padding:0 20px 100px; }
+h1,h2,h3{ font-family:'Oswald',sans-serif; margin:0; }
+a{ color:var(--yellow); }
+code, .mono{ font-family:'JetBrains Mono',monospace; }
+
+/* ---- Hero ---- */
+.hero{
+  padding:56px 0 40px; text-align:center; position:relative; overflow:hidden;
+}
+.hero-mark{
+  width:64px; height:64px; margin:0 auto 18px; display:flex; align-items:center;
+  justify-content:center; border:2.5px solid var(--yellow); border-radius:50%;
+  font-size:28px;
+}
+.hero h1{
+  font-size:32px; font-weight:600; letter-spacing:0.02em; text-transform:uppercase;
+  color:var(--text);
+}
+.hero .accent{ color:var(--yellow); }
+.hero p.tagline{
+  color:var(--text-muted); font-size:15.5px; max-width:480px; margin:14px auto 0;
+}
+.hero .readtime{
+  display:inline-block; margin-top:18px; padding:5px 14px; border-radius:20px;
+  background:var(--surface); border:1px solid var(--border); font-size:12.5px;
+  color:var(--text-muted);
+}
+
+/* ---- La route : fil conducteur visuel du guide ---- */
+.road{
+  position:relative; margin:8px 0 0; padding-left:34px;
+}
+.road::before{
+  content:''; position:absolute; left:11px; top:8px; bottom:8px; width:2px;
+  background-image:linear-gradient(var(--yellow) 60%, transparent 40%);
+  background-size:2px 14px; background-repeat:repeat-y;
+  opacity:0.55;
+}
+.stop{ position:relative; margin-bottom:44px; }
+.stop:last-child{ margin-bottom:0; }
+.stop-num{
+  position:absolute; left:-34px; top:0; width:24px; height:24px; border-radius:50%;
+  background:var(--yellow); color:#1B1D1E; font-family:'Oswald',sans-serif;
+  font-weight:700; font-size:13px; display:flex; align-items:center; justify-content:center;
+}
+.stop-head{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.stop-emoji{ font-size:26px; line-height:1; }
+.stop h2{ font-size:19px; letter-spacing:0.01em; }
+.stop-body{ color:var(--text); font-size:14.5px; }
+.stop-body p{ margin:0 0 10px; }
+.stop-body ul{ margin:0 0 10px; padding-left:20px; }
+.stop-body li{ margin-bottom:6px; }
+
+.callout{
+  background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--yellow);
+  border-radius:8px; padding:12px 14px; font-size:13.5px; margin-top:10px;
+}
+.callout b{ color:var(--yellow); }
+.callout.tip{ border-left-color:var(--green); }
+.callout.tip b{ color:var(--green); }
+
+.btn-tag{
+  display:inline-block; background:var(--surface-2); border:1px solid var(--border);
+  border-radius:6px; padding:2px 8px; font-family:'JetBrains Mono',monospace;
+  font-size:12.5px; color:var(--yellow);
+}
+
+/* ---- Statuts (échéances) ---- */
+.status-row{ display:flex; gap:10px; flex-wrap:wrap; margin:12px 0; }
+.status-chip{
+  flex:1; min-width:140px; background:var(--surface); border:1px solid var(--border);
+  border-radius:10px; padding:12px; text-align:center;
+}
+.status-dot{ width:10px; height:10px; border-radius:50%; margin:0 auto 6px; }
+.status-chip .lbl{ font-family:'Oswald',sans-serif; font-size:12.5px; text-transform:uppercase; letter-spacing:0.05em; }
+.status-chip .sub{ font-size:11.5px; color:var(--text-muted); margin-top:2px; }
+
+/* ---- Rôles de partage ---- */
+.roles-table{ width:100%; border-collapse:collapse; font-size:13px; margin-top:10px; }
+.roles-table th, .roles-table td{ padding:8px 6px; border-bottom:1px solid var(--border); text-align:left; }
+.roles-table th{ color:var(--text-muted); font-weight:500; font-size:11.5px; text-transform:uppercase; letter-spacing:0.04em; }
+.roles-table td.center, .roles-table th.center{ text-align:center; }
+
+/* ---- FAQ ---- */
+.faq-item{ border-bottom:1px solid var(--border); padding:14px 0; }
+.faq-item:last-child{ border-bottom:none; }
+.faq-q{ font-family:'Oswald',sans-serif; font-size:14.5px; color:var(--yellow); margin-bottom:6px; }
+.faq-a{ font-size:13.5px; color:var(--text); }
+
+/* ---- Section wrapper ---- */
+section.block{ margin-top:52px; }
+section.block h2.section-title{
+  font-size:13px; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-muted);
+  margin-bottom:16px; display:flex; align-items:center; gap:10px;
+}
+section.block h2.section-title::after{ content:''; flex:1; height:1px; background:var(--border); }
+
+/* ---- Footer ---- */
+.footer{ text-align:center; margin-top:60px; color:var(--text-muted); font-size:12.5px; }
+.footer .wrench{ font-size:20px; display:block; margin-bottom:8px; }
+
+@media (max-width:480px){
+  .hero h1{ font-size:25px; }
+  .road{ padding-left:28px; }
+  .stop-num{ left:-28px; width:20px; height:20px; font-size:11px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="hero-mark">🏠</div>
+    <h1>Bienvenue dans<br><span class="accent">Ma Maison</span></h1>
+    <p class="tagline">Le carnet d'entretien de ton logement : ramonage, chaudière ou pompe à chaleur, toiture, gouttières, fosse septique... sans rien noter sur un coin de papier.</p>
+    <span class="readtime">☕️ 4 minutes de lecture, promis</span>
+  </div>
+
+  <div class="road">
+
+    <div class="stop">
+      <div class="stop-num">1</div>
+      <div class="stop-head"><span class="stop-emoji">🏡</span><h2>Ajoute ton premier bien</h2></div>
+      <div class="stop-body">
+        <p>Appuie sur le <b>+</b> à droite des onglets : donne un nom au bien (« Maison », « Studio de ma fille »...), choisis son type, son adresse si tu veux, une couleur, et c'est parti. Tu peux gérer autant de biens que tu veux — chacun a son propre onglet, ses échéances et son historique.</p>
+        <div class="callout tip">
+          <b>💡 Bon à savoir</b> — chaque bien se partage séparément : tu peux donner accès au studio de ta fille sans qu'elle voie le reste.
+        </div>
+      </div>
+    </div>
+
+    <div class="stop">
+      <div class="stop-num">2</div>
+      <div class="stop-head"><span class="stop-emoji">🔧</span><h2>Enregistre une première intervention</h2></div>
+      <div class="stop-body">
+        <p>Un ramonage, l'entretien de la pompe à chaleur, un nettoyage de toiture... Appuie sur <span class="btn-tag">+ Nouvelle intervention</span>, choisis le ou les types, la date, et ajoute si tu veux le coût, le prestataire et une photo ou un PDF de la facture.</p>
+        <ul>
+          <li>Plusieurs travaux le même jour ? Coche-les d'un coup.</li>
+          <li>Pas de type qui correspond ? Crée le tien en deux clics (« Entretien portail »...), il sera disponible pour tous tes biens.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="stop">
+      <div class="stop-num">3</div>
+      <div class="stop-head"><span class="stop-emoji">📅</span><h2>Comprends tes échéances</h2></div>
+      <div class="stop-body">
+        <p>Chaque type d'entretien a une périodicité en <b>mois</b> (ramonage : 12, démoussage de toiture : 24...). L'app part de la dernière intervention enregistrée et t'indique la prochaine date, avec un code couleur :</p>
+        <div class="status-row">
+          <div class="status-chip"><div class="status-dot" style="background:var(--green);"></div><div class="lbl">À jour</div><div class="sub">Large marge</div></div>
+          <div class="status-chip"><div class="status-dot" style="background:var(--yellow);"></div><div class="lbl">À surveiller</div><div class="sub">Bientôt</div></div>
+          <div class="status-chip"><div class="status-dot" style="background:var(--red);"></div><div class="lbl">Dépassée</div><div class="sub">À faire vite</div></div>
+        </div>
+        <div class="callout">
+          <b>Adapte les périodicités à ton logement</b> — dans les réglages du bien (⚙️), tu règles les mois de chaque entretien, et tu peux y noter une référence (contrat, prestataire habituel).
+        </div>
+      </div>
+    </div>
+
+    <div class="stop">
+      <div class="stop-num">4</div>
+      <div class="stop-head"><span class="stop-emoji">👨‍👩‍👧</span><h2>Partage avec ta famille</h2></div>
+      <div class="stop-body">
+        <p>Dans les réglages d'un bien, <span class="btn-tag">🔗 Partager</span> permet d'inviter quelqu'un par e-mail, avec le niveau d'accès de ton choix :</p>
+        <table class="roles-table">
+          <tr><th>Rôle</th><th class="center">Voir</th><th class="center">Ajouter</th><th class="center">Tout modifier</th></tr>
+          <tr><td>Lecture seule</td><td class="center">✅</td><td class="center">—</td><td class="center">—</td></tr>
+          <tr><td>Contributeur</td><td class="center">✅</td><td class="center">✅</td><td class="center">—</td></tr>
+          <tr><td>Édition complète</td><td class="center">✅</td><td class="center">✅</td><td class="center">✅</td></tr>
+        </table>
+        <p style="margin-top:12px;">Une date d'expiration est possible pour un accès temporaire.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <section class="block">
+    <h2 class="section-title">✅ Suivre et vérifier</h2>
+
+    <div class="stop-head"><span class="stop-emoji">🧾</span><h2>La fiche de vérification annuelle</h2></div>
+    <div class="stop-body">
+      <p>Une fois par an (ou par saison), une fiche de vérification te guide point par point : toiture, gouttières, chauffage, détecteurs de fumée, tableau électrique, humidité, fosse septique...</p>
+      <ul>
+        <li>Pour chaque point : <b>OK</b> ou <b>À revoir</b>, avec une note si besoin.</li>
+        <li>Une anomalie repérée se transforme en <b>intervention à prévoir</b> en un clic.</li>
+        <li>Quand l'intervention est réalisée, elle rejoint l'historique du bien.</li>
+      </ul>
+      <div class="callout tip"><b>💡 Personnalisable</b> — la liste des points à vérifier peut être adaptée (ajout, suppression, thèmes).</div>
+    </div>
+
+    <div class="stop-head" style="margin-top:26px;"><span class="stop-emoji">📋</span><h2>Le journal d'activité</h2></div>
+    <div class="stop-body">
+      <p>Le bouton <span class="btn-tag">📋</span> dans l'en-tête ouvre l'historique de tout ce qui a changé : qui a fait quoi, et quand.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 class="section-title">📤 Partager et exporter</h2>
+    <div class="stop-body">
+      <ul>
+        <li><b>Export CSV</b> — toutes les interventions d'un bien dans un tableur.</li>
+        <li><b>PDF</b> — l'impression de la fiche du bien depuis ton navigateur.</li>
+        <li><b>Dossier du bien</b> — un document à choisir précisément (catégories, période, notes, coûts, factures) pour une vente, un assureur ou tes archives.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 class="section-title">📊 Regarder d'un peu plus haut</h2>
+    <div class="stop-body">
+      <p>L'onglet <b>Aperçu</b> montre l'état de tous tes biens, les interventions à prévoir et des statistiques globales (total dépensé, année en cours, par bien et par catégorie).</p>
+      <p>Le bouton <span class="btn-tag">🕓</span> te permet de consulter et restaurer une version antérieure : chaque modification est archivée automatiquement.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2 class="section-title">❓ Questions rapides</h2>
+    <div class="faq-item">
+      <div class="faq-q">Mes données sont-elles en sécurité ?</div>
+      <div class="faq-a">Chaque bien n'est visible que par toi et les personnes à qui tu l'as explicitement partagé. Tes documents sont stockés dans un espace privé, jamais accessible publiquement.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Ça fonctionne sans connexion internet ?</div>
+      <div class="faq-a">L'app peut s'ouvrir sans réseau, mais les données ont besoin d'une connexion pour se charger et se synchroniser.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Je peux l'installer sur mon téléphone ?</div>
+      <div class="faq-a">Oui — via l'option « Ajouter à l'écran d'accueil » de ton navigateur mobile.</div>
+    </div>
+  </section>
+
+  <div class="footer">
+    <span class="wrench">🏠</span>
+    Ma Maison — pensé pour ne plus jamais chercher « c'était quand, le dernier ramonage ? »
+  </div>
+
+</div>
+</body>
+</html>

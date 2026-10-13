@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ma Maison — Entretien du logement</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png" type="image/png">
+<meta name="theme-color" content="#1B1D1E">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ma Maison">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="styles.css">
+<script>
+  // Enregistrement du service worker (squelette de l'app en cache pour un
+  // fonctionnement minimal hors-ligne) — ne bloque rien si indisponible.
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('sw.js').catch(function(err){
+        console.error('Échec enregistrement du service worker :', err);
+      });
+    });
+  }
+</script>
+</head>
+<body>
+
+<div id="authOverlay" class="auth-overlay" style="display:none;">
+  <div class="auth-card">
+    <h2>Ma Maison</h2>
+    <p>Connectez-vous pour accéder au suivi d'entretien de vos biens.</p>
+    <div class="field">
+      <label>Adresse e-mail</label>
+      <input type="email" id="emailInput" placeholder="votre@email.com">
+    </div>
+    <div class="field" id="passwordField" style="display:none;">
+      <label>Mot de passe</label>
+      <input type="password" id="passwordInput" placeholder="••••••••">
+    </div>
+    <button class="auth-btn" id="emailLoginBtn">Se connecter</button>
+    <div class="auth-status" id="authStatus"></div>
+    <div class="auth-toggle" style="text-align:center; margin-top:12px;">
+      <a href="#" id="authModeToggle" style="font-size:13px; color:var(--yellow, #F0B429); text-decoration:underline; cursor:pointer;">Se connecter avec un mot de passe</a>
+    </div>
+  </div>
+</div>
+
+<div id="dossierPrintArea"></div>
+
+<div class="app">
+  <header class="topbar">
+    <div class="brand-mark">🏠</div>
+    <div class="brand-text" style="flex:1;">
+      <h1>Ma Maison</h1>
+      <p>Suivi d'entretien du logement</p>
+    </div>
+    <a href="guide.html" target="_blank" rel="noopener" class="icon-btn account-btn" title="Aide" aria-label="Aide">❓</a>
+    <button class="icon-btn account-btn" id="journalBtn" title="Journal d'activités" aria-label="Journal d'activités">📋</button>
+    <button class="icon-btn account-btn" id="backupsBtn" title="Sauvegardes" aria-label="Sauvegardes">🕓</button>
+    <div class="sync-status" id="syncStatus" style="display:none;"><span class="dot"></span><span id="syncStatusLabel">Synchronisé</span></div>
+    <button class="icon-btn account-btn" id="accountBtn" title="Compte"><span class="sync-dot"></span>Compte</button>
+  </header>
+
+  <nav class="tabs" id="tabsNav" role="tablist"></nav>
+
+  <main id="content" role="tabpanel">
+    <div class="loading">Chargement des données...</div>
+  </main>
+</div>
+
+<div class="fab">
+  <button class="add-btn" id="addBtn">+ Nouvelle intervention</button>
+</div>
+
+<button id="scrollTopBtn" class="scroll-top-btn" aria-label="Remonter en haut" style="display:none;">↑</button>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal"></div>
+</div>
+
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <p id="confirmMsg"></p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="confirmCancelBtn">Annuler</button>
+      <button class="btn btn-danger" id="confirmOkBtn" style="flex:1;">Confirmer</button>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="ui-common.js"></script>
+<script src="export-dossier.js"></script>
+<script src="checklist-sessions.js"></script>
+<script src="data-sync-calc.js"></script>
+<script src="render.js"></script>
+<script src="entry-modal.js"></script>
+<script src="property-modals.js"></script>
+<script src="journal-backups-init.js"></script>
+</body>
+</html>
