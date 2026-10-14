@@ -183,6 +183,7 @@ async function saveEntry(){
   var v = state.properties[activePropertyId];
   var now = new Date().toISOString();
   var list = state.entries[activePropertyId] || [];
+  state.entries[activePropertyId] = list; // garantit que la liste modifiée est bien celle de `state`
 
   // Upload de la facture (différé jusqu'ici pour connaître l'id de l'intervention/du lot)
   var saveBtn = document.getElementById('saveBtn');
